@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compressor | Huffman Coding Algorithm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>🖼️ Image Compressor</h1>
+                <p>See how Huffman Coding compresses data - from ZIP to JPEG!</p>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Input Panel -->
+            <div class="input-panel">
+                <h2>📝 Input Data</h2>
+                
+                <!-- Mode Selection -->
+                <div class="mode-selection">
+                    <button class="mode-btn active" data-mode="text">📄 Text Mode</button>
+                    <button class="mode-btn" data-mode="image">🖼️ Image Mode</button>
+                </div>
+
+                <!-- Text Input -->
+                <div class="input-mode active" id="textMode">
+                    <h3>✏️ Enter Text to Compress</h3>
+                    <textarea 
+                        id="textInput" 
+                        class="text-input" 
+                        placeholder="Type or paste text here... (e.g., 'AABBBCCCC')"
+                    >AABBBCCCC</textarea>
+
+                    <div class="quick-examples">
+                        <h4>📚 Quick Examples</h4>
+                        <button class="example-btn" data-text="AABBBCCCC">Simple (AABBBCCCC)</button>
+                        <button class="example-btn" data-text="HELLO WORLD">Hello World</button>
+                        <button class="example-btn" data-text="MISSISSIPPI RIVER">Mississippi River</button>
+                        <button class="example-btn" data-text="The quick brown fox jumps over the lazy dog">Pangram</button>
+                    </div>
+                </div>
+
+                <!-- Image Input -->
+                <div class="input-mode" id="imageMode">
+                    <h3>🖼️ Upload Image to Compress</h3>
+                    <div class="image-upload">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+                        <button id="uploadBtn" class="btn btn-primary">
+                            📁 Choose Image
+                        </button>
+                        <p class="info-text">Upload PNG, JPG, or GIF</p>
+                    </div>
+
+                    <div class="image-preview" id="imagePreview">
+                        <canvas id="imageCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Compression Options -->
+                <div class="compression-options" id="compressionOptions">
+                    <h3>⚙️ Image Options</h3>
+                    
+                    <div class="target-size-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="useTargetSize" />
+                            <span>🎯 Target File Size</span>
+                        </label>
+                        <div class="target-size-input" id="targetSizeInput">
+                            <input type="number" id="targetSizeKB" min="1" max="1000" value="50" />
+                            <span>KB</span>
+                            <button id="autoCompressBtn" class="btn-small">Auto Compress</button>
+                        </div>
+                        <p class="option-note">Automatically adjust settings to reach target size</p>
+                    </div>
+
+                    <div class="manual-controls" id="manualControls">
+                        <div class="slider-group">
+                            <label>Image Scale: <span id="scaleValue">50%</span></label>
+                            <input type="range" id="imageScale" min="10" max="100" value="50" class="slider" />
+                            <p class="option-note">Resize image before compression</p>
+                        </div>
+                        <div class="slider-group">
+                            <label>Color Depth: <span id="colorDepthValue">8 colors</span></label>
+                            <input type="range" id="colorDepth" min="2" max="8" value="3" class="slider" />
+                            <p class="option-note">Reduce color palette (2-256 colors)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="compressBtn" class="btn btn-primary">
+                        🔥 Compress!
+                    </button>
+                    <button id="downloadBtn" class="btn btn-download" disabled>
+                        💾 Download Compressed
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        🗑️ Clear
+                    </button>
+                </div>
+
+                <!-- Compression Stats -->
+                <div class="stats-panel">
+                    <h3>📊 Compression Stats</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Original Size:</span>
+                        <span class="stat-value" id="originalSize">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Compressed Size:</span>
+                        <span class="stat-value" id="compressedSize">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Compression Ratio:</span>
+                        <span class="stat-value" id="compressionRatio">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Space Saved:</span>
+                        <span class="stat-value saved" id="spaceSaved">-</span>
+                    </div>
+                    <div class="stat-row highlight">
+                        <span class="stat-label">💾 File Size:</span>
+                        <span class="stat-value" id="fileSizeKB">-</span>
+                    </div>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="algorithm-info">
+                    <h3>🧠 Huffman Coding</h3>
+                    <p><strong>Greedy Algorithm</strong></p>
+                    <p><strong>Build Tree:</strong> O(n log n)</p>
+                    <p><strong>Encode:</strong> O(n)</p>
+                    <p class="info-note">Variable-length prefix-free encoding</p>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-area">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="frequency">📊 Frequency Analysis</button>
+                    <button class="tab-btn" data-tab="tree">🌳 Huffman Tree</button>
+                    <button class="tab-btn" data-tab="encoding">💾 Encoding Table</button>
+                    <button class="tab-btn" data-tab="comparison">⚖️ Before vs After</button>
+                </div>
+
+                <!-- Frequency Analysis Tab -->
+                <div class="tab-content active" id="frequency">
+                    <div class="viz-header">
+                        <h3>📊 Character Frequency Analysis</h3>
+                        <p class="viz-subtitle">How often each character appears</p>
+                    </div>
+                    <div class="frequency-container" id="frequencyContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <h3>No Data Yet</h3>
+                            <p>Enter text or upload an image and click Compress!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Huffman Tree Tab -->
+                <div class="tab-content" id="tree">
+                    <div class="viz-header">
+                        <h3>🌳 Huffman Tree Visualization</h3>
+                        <p class="viz-subtitle">Binary tree for optimal encoding</p>
+                    </div>
+                    <div class="tree-container" id="treeContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">🌳</div>
+                            <h3>No Tree Yet</h3>
+                            <p>Compress data to see the Huffman tree!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Encoding Table Tab -->
+                <div class="tab-content" id="encoding">
+                    <div class="viz-header">
+                        <h3>💾 Huffman Encoding Table</h3>
+                        <p class="viz-subtitle">Variable-length binary codes</p>
+                    </div>
+                    <div class="encoding-container" id="encodingContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">💾</div>
+                            <h3>No Encoding Yet</h3>
+                            <p>Compress data to see the encoding table!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Tab -->
+                <div class="tab-content" id="comparison">
+                    <div class="viz-header">
+                        <h3>⚖️ Before vs After Comparison</h3>
+                    </div>
+                    <div class="comparison-container">
+                        <div class="comparison-box">
+                            <h4>📥 Original (Fixed-length)</h4>
+                            <div class="data-display" id="originalData">-</div>
+                            <p class="data-description">8 bits per character (ASCII)</p>
+                        </div>
+                        <div class="comparison-arrow">→</div>
+                        <div class="comparison-box">
+                            <h4>📤 Compressed (Variable-length)</h4>
+                            <div class="data-display" id="compressedData">-</div>
+                            <p class="data-description">Huffman encoded bits</p>
+                        </div>
+                    </div>
+
+                    <div class="encoding-demo" id="encodingDemo">
+                        <h4>🔍 Character-by-Character Encoding</h4>
+                        <div class="demo-content" id="demoContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation-section">
+            <h2>🧠 How Huffman Coding Works</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">🎯</div>
+                    <h3>Greedy Algorithm</h3>
+                    <p>Builds optimal encoding by always choosing the two least frequent nodes to merge. Local optimal choices lead to global optimum!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">📏</div>
+                    <h3>Variable-Length Codes</h3>
+                    <p>Frequent characters get short codes (e.g., "0"), rare characters get long codes (e.g., "11010"). Average code length is minimized!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🔒</div>
+                    <h3>Prefix-Free Property</h3>
+                    <p>No code is a prefix of another! "0" and "01" can't both be codes. This makes decoding unambiguous - read bit by bit until you match a code.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">⚡</div>
+                    <h3>Optimal Compression</h3>
+                    <p>Huffman coding is provably optimal for character-by-character encoding. Can't do better without considering character relationships!</p>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 Huffman Coding Algorithm Steps</h3>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Count Frequencies</h4>
+                            <p>Count how many times each character appears in the data. This determines priority.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Create Leaf Nodes</h4>
+                            <p>Create a leaf node for each character with its frequency. Add all nodes to a priority queue.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Build Tree (Greedy)</h4>
+                            <p>While more than 1 node: pop 2 nodes with lowest frequency, merge them into parent node with combined frequency, push back to queue.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Assign Codes</h4>
+                            <p>Traverse tree from root. Left edge = 0, right edge = 1. Path from root to leaf = code for that character.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Encode Data</h4>
+                            <p>Replace each character with its Huffman code. Result: compressed bit stream!</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>Decode (Optional)</h4>
+                            <p>Read bits one by one, traverse tree from root. When you reach a leaf, output that character. Start over from root.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-walkthrough">
+                <h3>🎯 Example: "AABBBCCCC"</h3>
+                
+                <div class="walkthrough-section">
+                    <h4>Step 1: Count Frequencies</h4>
+                    <div class="frequency-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Frequency</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>A</td>
+                                    <td>2</td>
+                                    <td>22.2%</td>
+                                </tr>
+                                <tr>
+                                    <td>B</td>
+                                    <td>3</td>
+                                    <td>33.3%</td>
+                                </tr>
+                                <tr>
+                                    <td>C</td>
+                                    <td>4</td>
+                                    <td>44.4%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Step 2: Build Huffman Tree</h4>
+                    <div class="tree-building">
+                        <p><strong>Priority Queue:</strong> [A:2, B:3, C:4]</p>
+                        <p><strong>Step 1:</strong> Merge A(2) + B(3) = AB(5)</p>
+                        <p><strong>Queue:</strong> [C:4, AB:5]</p>
+                        <p><strong>Step 2:</strong> Merge C(4) + AB(5) = Root(9)</p>
+                        <p><strong>Result:</strong> Complete tree!</p>
+                    </div>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Step 3: Assign Codes</h4>
+                    <div class="code-assignment">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Character</th>
+                                    <th>Huffman Code</th>
+                                    <th>Bits</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>C (most frequent)</td>
+                                    <td>0</td>
+                                    <td>1 bit</td>
+                                </tr>
+                                <tr>
+                                    <td>B</td>
+                                    <td>10</td>
+                                    <td>2 bits</td>
+                                </tr>
+                                <tr>
+                                    <td>A (least frequent)</td>
+                                    <td>11</td>
+                                    <td>2 bits</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Step 4: Compression Results</h4>
+                    <div class="compression-result">
+                        <div class="result-row">
+                            <strong>Original:</strong> AABBBCCCC (9 characters)
+                        </div>
+                        <div class="result-row">
+                            <strong>Fixed-length (ASCII):</strong> 9 × 8 = 72 bits
+                        </div>
+                        <div class="result-row">
+                            <strong>Huffman encoded:</strong> 11 11 10 10 10 0 0 0 0
+                        </div>
+                        <div class="result-row">
+                            <strong>Compressed size:</strong> 2+2+2+2+2+1+1+1+1 = 14 bits
+                        </div>
+                        <div class="result-row success">
+                            <strong>Compression ratio:</strong> 80.6% reduction!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>📦 ZIP Files</strong>
+                        <p>DEFLATE algorithm uses Huffman coding for compression</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📷 JPEG Images</strong>
+                        <p>Huffman coding compresses DCT coefficients in JPEG</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🎵 MP3 Audio</strong>
+                        <p>Part of MP3 compression pipeline</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📡 Fax Machines</strong>
+                        <p>CCITT Group 3 and 4 use Huffman coding</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📺 Video Codecs</strong>
+                        <p>H.264, MPEG use Huffman-like entropy coding</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🌐 HTTP Compression</strong>
+                        <p>GZIP uses Huffman coding for web content</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fun-facts">
+                <h3>💡 Fun Facts</h3>
+                <div class="fact-grid">
+                    <div class="fact-card">
+                        <strong>🎓 MIT PhD Thesis</strong>
+                        <p>David Huffman invented this as a term paper for his MIT PhD in 1952! He got an A+ and revolutionized data compression.</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>📜 Fax Machines</strong>
+                        <p>Huffman coding made fax machines practical! Before this, sending a page took 6 minutes. Huffman reduced it to under 1 minute.</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>⚡ Provably Optimal</strong>
+                        <p>Huffman proved his algorithm always produces optimal prefix-free codes! Can't beat it for symbol-by-symbol compression.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 5 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

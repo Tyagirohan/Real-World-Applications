@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load Balancer Simulator | Consistent Hashing</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>⚖️ Load Balancer Simulator</h1>
+                <p>See how Consistent Hashing distributes traffic - used by AWS, CDNs, Redis!</p>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>🎛️ Controls</h2>
+                
+                <!-- Server Management -->
+                <div class="server-management">
+                    <h3>🖥️ Manage Servers</h3>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="serverName" 
+                            placeholder="Server name..."
+                            class="server-input"
+                        />
+                        <button id="addServerBtn" class="btn btn-primary">
+                            ➕ Add Server
+                        </button>
+                    </div>
+                    
+                    <div class="server-list" id="serverList">
+                        <p class="empty-note">No servers yet. Add one!</p>
+                    </div>
+                </div>
+
+                <!-- Request Simulation -->
+                <div class="simulation-section">
+                    <h3>📨 Simulate Requests</h3>
+                    
+                    <div class="slider-group">
+                        <label>Number of Requests: <span id="requestCountValue">100</span></label>
+                        <input type="range" id="requestCount" min="10" max="1000" value="100" step="10" class="slider" />
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Virtual Nodes: <span id="virtualNodesValue">3</span></label>
+                        <input type="range" id="virtualNodes" min="1" max="10" value="3" class="slider" />
+                        <p class="option-note">More = better distribution</p>
+                    </div>
+
+                    <button id="simulateBtn" class="btn btn-primary">
+                        🚀 Simulate Traffic
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        🗑️ Clear All
+                    </button>
+                </div>
+
+                <!-- Load Balancing Strategy -->
+                <div class="strategy-section">
+                    <h3>⚙️ Strategy</h3>
+                    <div class="strategy-buttons">
+                        <button class="strategy-btn active" data-strategy="consistent">
+                            Consistent Hash
+                        </button>
+                        <button class="strategy-btn" data-strategy="modulo">
+                            Naive (Modulo)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-panel">
+                    <h3>📊 Statistics</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Servers:</span>
+                        <span class="stat-value" id="totalServers">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Requests:</span>
+                        <span class="stat-value" id="totalRequests">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg Load/Server:</span>
+                        <span class="stat-value" id="avgLoad">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Load Variance:</span>
+                        <span class="stat-value" id="loadVariance">0%</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Max Load:</span>
+                        <span class="stat-value" id="maxLoad">0</span>
+                    </div>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="algorithm-info">
+                    <h3>🧠 Algorithm</h3>
+                    <p><strong>Consistent Hashing</strong></p>
+                    <p><strong>Add Server:</strong> O(log n)</p>
+                    <p><strong>Route Request:</strong> O(log n)</p>
+                    <p class="info-note">Minimal rebalancing on server changes</p>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-area">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="ring">🔄 Hash Ring</button>
+                    <button class="tab-btn" data-tab="distribution">📊 Distribution</button>
+                    <button class="tab-btn" data-tab="comparison">⚖️ Comparison</button>
+                </div>
+
+                <!-- Hash Ring Tab -->
+                <div class="tab-content active" id="ring">
+                    <div class="viz-header">
+                        <h3>🔄 Consistent Hashing Ring</h3>
+                        <p class="viz-subtitle">Servers and virtual nodes on 360° ring</p>
+                    </div>
+                    <div class="ring-container">
+                        <canvas id="ringCanvas" width="600" height="600"></canvas>
+                        <div class="ring-legend">
+                            <div class="legend-item">
+                                <div class="legend-color server"></div>
+                                <span>Servers</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color virtual"></div>
+                                <span>Virtual Nodes</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color request"></div>
+                                <span>Requests</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribution Tab -->
+                <div class="tab-content" id="distribution">
+                    <div class="viz-header">
+                        <h3>📊 Request Distribution</h3>
+                        <p class="viz-subtitle">Load per server</p>
+                    </div>
+                    <div class="distribution-container" id="distributionContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <h3>No Data Yet</h3>
+                            <p>Add servers and simulate traffic!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Tab -->
+                <div class="tab-content" id="comparison">
+                    <div class="viz-header">
+                        <h3>⚖️ Consistent Hash vs Naive Modulo</h3>
+                    </div>
+                    <div class="comparison-grid">
+                        <div class="comparison-card">
+                            <h4>✅ Consistent Hashing</h4>
+                            <div class="comparison-metric">
+                                <strong>Rebalancing on Add:</strong>
+                                <span class="good">~1/n keys move</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Rebalancing on Remove:</strong>
+                                <span class="good">~1/n keys move</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Distribution:</strong>
+                                <span class="good">Very even with virtual nodes</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Lookup Time:</strong>
+                                <span class="good">O(log n)</span>
+                            </div>
+                        </div>
+
+                        <div class="comparison-card">
+                            <h4>❌ Naive (Modulo)</h4>
+                            <div class="comparison-metric">
+                                <strong>Rebalancing on Add:</strong>
+                                <span class="bad">~ALL keys move!</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Rebalancing on Remove:</strong>
+                                <span class="bad">~ALL keys move!</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Distribution:</strong>
+                                <span class="ok">Perfectly even</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <strong>Lookup Time:</strong>
+                                <span class="good">O(1)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rebalancing-demo">
+                        <h4>🔄 Rebalancing Demo</h4>
+                        <p>Watch what happens when we add/remove a server:</p>
+                        <div class="demo-buttons">
+                            <button id="demoAddBtn" class="btn-demo">Add Server Demo</button>
+                            <button id="demoRemoveBtn" class="btn-demo">Remove Server Demo</button>
+                        </div>
+                        <div class="demo-results" id="demoResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation-section">
+            <h2>🧠 How Consistent Hashing Works</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">🔄</div>
+                    <h3>Hash Ring</h3>
+                    <p>Imagine a circular ring (0-360°). Both servers and requests are hashed to positions on this ring. Requests go to the next clockwise server!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">👥</div>
+                    <h3>Virtual Nodes</h3>
+                    <p>Each physical server maps to multiple positions (virtual nodes) on the ring. This ensures even distribution even with few servers!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">⚡</div>
+                    <h3>Minimal Rebalancing</h3>
+                    <p>When adding/removing servers, only ~1/n of keys need to move! Compare to naive modulo where ALL keys move. Huge win for distributed systems!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🎯</div>
+                    <h3>Stable Mapping</h3>
+                    <p>Same request always goes to same server (unless that server is down). Critical for caching and session management!</p>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 Algorithm Steps</h3>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Hash Servers to Ring</h4>
+                            <p>Hash each server name to get position on ring (0-360°). With virtual nodes, hash "server-0", "server-1", etc.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Hash Request Key</h4>
+                            <p>Hash request ID/key to get position on ring.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Find Next Server (Clockwise)</h4>
+                            <p>Move clockwise from request position until hitting a server node. That's your target!</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Binary Search (O(log n))</h4>
+                            <p>Keep servers sorted. Use binary search to find next server efficiently.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-walkthrough">
+                <h3>🎯 Example: 3 Servers, Add 1 More</h3>
+                
+                <div class="walkthrough-section">
+                    <h4>Initial State: 3 Servers (A, B, C)</h4>
+                    <p><strong>Ring positions:</strong></p>
+                    <ul>
+                        <li>Server A: 90°</li>
+                        <li>Server B: 180°</li>
+                        <li>Server C: 270°</li>
+                    </ul>
+                    <p><strong>Request distribution:</strong></p>
+                    <ul>
+                        <li>0-90°: Go to A</li>
+                        <li>90-180°: Go to B</li>
+                        <li>180-270°: Go to C</li>
+                        <li>270-360°: Go to A</li>
+                    </ul>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Add Server D at 135°</h4>
+                    <p><strong>What moves?</strong></p>
+                    <ul>
+                        <li>90-135°: Still go to A ✅ (no change)</li>
+                        <li>135-180°: Now go to D 🔄 (moved from B)</li>
+                        <li>180-270°: Still go to C ✅ (no change)</li>
+                        <li>270-360°: Still go to A ✅ (no change)</li>
+                    </ul>
+                    <p><strong>Result: Only 1/4 of requests moved!</strong></p>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Compare with Naive Modulo</h4>
+                    <div class="comparison-result">
+                        <div class="result-bad">
+                            <strong>❌ Naive (hash % n):</strong>
+                            <p>All requests rehash! Request at 100° used to be hash%3=1 (server B), now hash%4=0 (server A). Every single mapping changes!</p>
+                        </div>
+                        <div class="result-good">
+                            <strong>✅ Consistent Hashing:</strong>
+                            <p>Only requests between 135-180° move (from B to D). That's just ~12.5% of requests! 87.5% stay put.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>☁️ AWS/Cloud Load Balancers</strong>
+                        <p>Distribute traffic across EC2 instances with minimal disruption</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🌐 CDN (CloudFlare, Akamai)</strong>
+                        <p>Route requests to nearest edge server consistently</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>💾 Redis/Memcached Clusters</strong>
+                        <p>Shard data across cache servers</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📊 Cassandra/DynamoDB</strong>
+                        <p>Distribute data across database nodes</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🎮 Game Servers</strong>
+                        <p>Route players to game instances consistently</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📹 Video Streaming</strong>
+                        <p>Direct users to streaming servers (Netflix, YouTube)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fun-facts">
+                <h3>💡 Fun Facts</h3>
+                <div class="fact-grid">
+                    <div class="fact-card">
+                        <strong>🎓 MIT Invention</strong>
+                        <p>Invented at MIT in 1997 by Karger et al. for web caching! Solved the "hot spot" problem when caching servers fail.</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>🔥 Amazon Dynamo</strong>
+                        <p>Amazon's Dynamo paper (2007) popularized consistent hashing. Now powers AWS, Cassandra, Riak, and more!</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>⚡ Virtual Nodes Trick</strong>
+                        <p>Virtual nodes were added to fix uneven distribution. Each server gets 100-200 virtual positions on the ring!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 6 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

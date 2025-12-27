@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Evaluator | Shunting Yard Algorithm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>🧮 Expression Evaluator</h1>
+                <p>Scientific calculator powered by Shunting Yard algorithm!</p>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Calculator Panel -->
+            <div class="calculator-panel">
+                <h2>🔢 Calculator</h2>
+                
+                <!-- Display -->
+                <div class="calculator-display">
+                    <div class="expression-display" id="expressionDisplay">0</div>
+                    <div class="result-display" id="resultDisplay"></div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="calculator-buttons">
+                    <!-- Row 1: Functions -->
+                    <button class="btn-function" data-value="sin">sin</button>
+                    <button class="btn-function" data-value="cos">cos</button>
+                    <button class="btn-function" data-value="tan">tan</button>
+                    <button class="btn-function" data-value="sqrt">√</button>
+                    <button class="btn-function" data-value="log">log</button>
+
+                    <!-- Row 2: Advanced -->
+                    <button class="btn-function" data-value="(">(&thinsp;</button>
+                    <button class="btn-function" data-value=")">)</button>
+                    <button class="btn-operator" data-value="^">x²</button>
+                    <button class="btn-clear" id="clearBtn">C</button>
+                    <button class="btn-backspace" id="backspaceBtn">⌫</button>
+
+                    <!-- Row 3-6: Numbers and operators -->
+                    <button class="btn-number" data-value="7">7</button>
+                    <button class="btn-number" data-value="8">8</button>
+                    <button class="btn-number" data-value="9">9</button>
+                    <button class="btn-operator" data-value="/">÷</button>
+                    <button class="btn-operator" data-value="*">×</button>
+
+                    <button class="btn-number" data-value="4">4</button>
+                    <button class="btn-number" data-value="5">5</button>
+                    <button class="btn-number" data-value="6">6</button>
+                    <button class="btn-operator" data-value="-">−</button>
+                    <button class="btn-operator" data-value="+">+</button>
+
+                    <button class="btn-number" data-value="1">1</button>
+                    <button class="btn-number" data-value="2">2</button>
+                    <button class="btn-number" data-value="3">3</button>
+                    <button class="btn-number" data-value="0" style="grid-column: span 2;">0</button>
+
+                    <button class="btn-number" data-value=".">.</button>
+                    <button class="btn-function" data-value="pi">π</button>
+                    <button class="btn-function" data-value="e">e</button>
+                    <button class="btn-equals" id="equalsBtn">=</button>
+                </div>
+
+                <!-- Quick Examples -->
+                <div class="quick-examples">
+                    <h3>📚 Try These</h3>
+                    <button class="example-btn" data-expr="2 + 3 * 4">2 + 3 × 4</button>
+                    <button class="example-btn" data-expr="(2 + 3) * 4">(2 + 3) × 4</button>
+                    <button class="example-btn" data-expr="2 ^ 3 + 5">2³ + 5</button>
+                    <button class="example-btn" data-expr="sin(45) + cos(45)">sin(45) + cos(45)</button>
+                    <button class="example-btn" data-expr="sqrt(16) * 3">√16 × 3</button>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-area">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="steps">📝 Step-by-Step</button>
+                    <button class="tab-btn" data-tab="stacks">📚 Stack Visualization</button>
+                    <button class="tab-btn" data-tab="conversion">🔄 Infix → Postfix</button>
+                </div>
+
+                <!-- Step-by-Step Tab -->
+                <div class="tab-content active" id="steps">
+                    <div class="viz-header">
+                        <h3>📝 Evaluation Steps</h3>
+                    </div>
+                    <div class="steps-container" id="stepsContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">🧮</div>
+                            <h3>Enter an Expression</h3>
+                            <p>Type a math expression and press = to see how it's evaluated!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stack Visualization Tab -->
+                <div class="tab-content" id="stacks">
+                    <div class="viz-header">
+                        <h3>📚 Stack State During Conversion</h3>
+                        <p class="viz-subtitle">Shunting Yard Algorithm</p>
+                    </div>
+                    <div class="stacks-container" id="stacksContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">📚</div>
+                            <h3>No Data Yet</h3>
+                            <p>Evaluate an expression to see the stack states!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Infix to Postfix Tab -->
+                <div class="tab-content" id="conversion">
+                    <div class="viz-header">
+                        <h3>🔄 Infix to Postfix Conversion</h3>
+                    </div>
+                    <div class="conversion-container">
+                        <div class="conversion-box">
+                            <h4>📥 Infix Notation</h4>
+                            <div class="notation-display" id="infixDisplay">-</div>
+                            <p class="notation-description">Human-readable: operators between operands</p>
+                        </div>
+                        <div class="conversion-arrow">→</div>
+                        <div class="conversion-box">
+                            <h4>📤 Postfix Notation (RPN)</h4>
+                            <div class="notation-display" id="postfixDisplay">-</div>
+                            <p class="notation-description">Computer-friendly: operators after operands</p>
+                        </div>
+                    </div>
+
+                    <div class="operator-precedence">
+                        <h4>⚖️ Operator Precedence</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Operator</th>
+                                    <th>Precedence</th>
+                                    <th>Associativity</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>( )</td>
+                                    <td>Highest</td>
+                                    <td>-</td>
+                                    <td>(2 + 3)</td>
+                                </tr>
+                                <tr>
+                                    <td>^</td>
+                                    <td>4</td>
+                                    <td>Right</td>
+                                    <td>2 ^ 3</td>
+                                </tr>
+                                <tr>
+                                    <td>* /</td>
+                                    <td>3</td>
+                                    <td>Left</td>
+                                    <td>3 × 4</td>
+                                </tr>
+                                <tr>
+                                    <td>+ -</td>
+                                    <td>2</td>
+                                    <td>Left</td>
+                                    <td>2 + 3</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation-section">
+            <h2>🧠 How Expression Evaluation Works</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">🚂</div>
+                    <h3>Shunting Yard Algorithm</h3>
+                    <p>Invented by Dijkstra! Converts infix (2+3) to postfix (2 3 +) using operator precedence and stacks. Named after railroad shunting yards!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">📥</div>
+                    <h3>Infix Notation</h3>
+                    <p>How humans write math: operators between operands (2 + 3). Requires precedence rules and parentheses for order.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">📤</div>
+                    <h3>Postfix (RPN)</h3>
+                    <p>Reverse Polish Notation: operators after operands (2 3 +). No parentheses needed! Easy for computers to evaluate with one stack.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">⚙️</div>
+                    <h3>Stack-Based Evaluation</h3>
+                    <p>Postfix is evaluated left-to-right with a stack: push numbers, pop for operators, push result. Simple and efficient!</p>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 Shunting Yard Algorithm Steps</h3>
+                
+                <div class="algo-section">
+                    <h4>🔄 Converting Infix to Postfix</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Read token from infix expression</h5>
+                                <p>Process expression left to right</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>If number → output queue</h5>
+                                <p>Operands go directly to output</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>If operator → check precedence</h5>
+                                <p>Pop operators from stack with higher/equal precedence to output</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Push operator to stack</h5>
+                                <p>Current operator goes on stack</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h5>Left parenthesis → push to stack</h5>
+                                <p>Increases precedence of following operators</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <h5>Right parenthesis → pop until (</h5>
+                                <p>Pop all operators until matching left parenthesis</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">7</div>
+                            <div class="step-content">
+                                <h5>End → pop all remaining operators</h5>
+                                <p>Empty operator stack to output queue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algo-section">
+                    <h4>⚙️ Evaluating Postfix Expression</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Create empty stack</h5>
+                                <p>Will hold operands during evaluation</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Read token left to right</h5>
+                                <p>Process postfix expression sequentially</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>If number → push to stack</h5>
+                                <p>Operands stored for operations</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>If operator → pop 2, compute, push result</h5>
+                                <p>Apply operator to top 2 stack values</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h5>Final stack value is result</h5>
+                                <p>After all tokens, one value remains</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="example-walkthrough">
+                <h3>🎯 Example: (2 + 3) × 4</h3>
+                
+                <div class="walkthrough-section">
+                    <h4>Step 1: Infix → Postfix</h4>
+                    <div class="walkthrough-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Action</th>
+                                    <th>Operator Stack</th>
+                                    <th>Output Queue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>(</td>
+                                    <td>Push to stack</td>
+                                    <td>( </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Output</td>
+                                    <td>( </td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>+</td>
+                                    <td>Push to stack</td>
+                                    <td>( +</td>
+                                    <td>2</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Output</td>
+                                    <td>( +</td>
+                                    <td>2 3</td>
+                                </tr>
+                                <tr>
+                                    <td>)</td>
+                                    <td>Pop until (</td>
+                                    <td></td>
+                                    <td>2 3 +</td>
+                                </tr>
+                                <tr>
+                                    <td>×</td>
+                                    <td>Push to stack</td>
+                                    <td>×</td>
+                                    <td>2 3 +</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Output</td>
+                                    <td>×</td>
+                                    <td>2 3 + 4</td>
+                                </tr>
+                                <tr>
+                                    <td>END</td>
+                                    <td>Pop all</td>
+                                    <td></td>
+                                    <td>2 3 + 4 ×</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="walkthrough-section">
+                    <h4>Step 2: Evaluate Postfix (2 3 + 4 ×)</h4>
+                    <div class="walkthrough-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>Action</th>
+                                    <th>Stack</th>
+                                    <th>Calculation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Push</td>
+                                    <td>2</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Push</td>
+                                    <td>2 3</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>+</td>
+                                    <td>Pop 2, compute, push</td>
+                                    <td>5</td>
+                                    <td>2 + 3 = 5</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Push</td>
+                                    <td>5 4</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>×</td>
+                                    <td>Pop 2, compute, push</td>
+                                    <td>20</td>
+                                    <td>5 × 4 = 20</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="result-box">
+                        <strong>Final Result:</strong> 20
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>🖥️ Compilers</strong>
+                        <p>Parse and evaluate expressions in programming languages</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🧮 Calculators</strong>
+                        <p>All scientific calculators use this algorithm internally</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📊 Spreadsheets</strong>
+                        <p>Excel, Google Sheets - formula evaluation</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🔧 Configuration Files</strong>
+                        <p>Parse math expressions in config files, JSON schemas</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🎮 Game Engines</strong>
+                        <p>Damage calculations, physics formulas</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🤖 Script Interpreters</strong>
+                        <p>JavaScript, Python - expression parsing</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fun-facts">
+                <h3>💡 Fun Facts</h3>
+                <div class="fact-grid">
+                    <div class="fact-card">
+                        <strong>🚂 Why "Shunting Yard"?</strong>
+                        <p>Dijkstra named it after railroad shunting yards where trains are sorted! Operators move between stacks like train cars being rearranged.</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>🧮 HP Calculators</strong>
+                        <p>HP's famous calculators use RPN (postfix) directly! Users love it because it's faster - no = key needed!</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>⚡ One Pass</strong>
+                        <p>Shunting Yard converts infix to postfix in a single left-to-right pass. O(n) time, incredibly efficient!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 4 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
