@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Generator & Solver | DFS, BFS, A* Algorithms</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>🎮 Maze Generator & Solver</h1>
+                <p>Watch DFS, BFS, and A* algorithms race to find the exit!</p>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ Maze Controls</h2>
+                
+                <!-- Maze Settings -->
+                <div class="settings-section">
+                    <h3>🎨 Maze Settings</h3>
+                    
+                    <div class="slider-group">
+                        <label>Maze Size: <span id="mazeSizeValue">20×20</span></label>
+                        <input type="range" id="mazeSize" min="10" max="50" value="20" step="5" class="slider" />
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Animation Speed: <span id="speedValue">Normal</span></label>
+                        <input type="range" id="animationSpeed" min="1" max="5" value="3" class="slider" />
+                        <div class="speed-labels">
+                            <span>Slow</span>
+                            <span>Fast</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generation -->
+                <div class="action-section">
+                    <h3>🏗️ Generate Maze</h3>
+                    <button id="generateBtn" class="btn btn-primary">
+                        🎲 Generate New Maze
+                    </button>
+                    <p class="info-text">Uses DFS (Recursive Backtracking)</p>
+                </div>
+
+                <!-- Drawing Mode -->
+                <div class="drawing-section">
+                    <h3>✏️ Draw Mode</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="drawMode" />
+                        <span>Enable Draw Mode</span>
+                    </label>
+                    <p class="info-text">Click cells to add/remove walls</p>
+                </div>
+
+                <!-- Solving -->
+                <div class="solve-section">
+                    <h3>🚀 Solve Maze</h3>
+                    <button id="solveDFS" class="btn btn-algo dfs">
+                        🔵 Solve with DFS
+                    </button>
+                    <button id="solveBFS" class="btn btn-algo bfs">
+                        🟢 Solve with BFS
+                    </button>
+                    <button id="solveAStar" class="btn btn-algo astar">
+                        🟡 Solve with A*
+                    </button>
+                    <button id="solveAll" class="btn btn-race">
+                        🏁 Race All Algorithms!
+                    </button>
+                </div>
+
+                <!-- Algorithm Stats -->
+                <div class="stats-section">
+                    <h3>📊 Current Stats</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Algorithm:</span>
+                        <span class="stat-value" id="currentAlgo">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Path Length:</span>
+                        <span class="stat-value" id="pathLength">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Cells Visited:</span>
+                        <span class="stat-value" id="cellsVisited">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Time Taken:</span>
+                        <span class="stat-value" id="timeTaken">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Efficiency:</span>
+                        <span class="stat-value" id="efficiency">-</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button id="clearPathBtn" class="btn btn-secondary">
+                        🧹 Clear Path
+                    </button>
+                    <button id="resetBtn" class="btn btn-secondary">
+                        🔄 Reset Maze
+                    </button>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="algorithm-info">
+                    <h3>🧠 Algorithms</h3>
+                    <div class="algo-brief">
+                        <strong>🔵 DFS:</strong> Depth-First<br>
+                        <small>Goes deep, backtracks when stuck</small>
+                    </div>
+                    <div class="algo-brief">
+                        <strong>🟢 BFS:</strong> Breadth-First<br>
+                        <small>Explores level by level, shortest path</small>
+                    </div>
+                    <div class="algo-brief">
+                        <strong>🟡 A*:</strong> Heuristic Search<br>
+                        <small>Smart pathfinding, most efficient</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maze Area -->
+            <div class="maze-area">
+                <div class="maze-header">
+                    <h3>🗺️ Maze</h3>
+                    <div class="maze-info">
+                        <span class="status-badge" id="statusBadge">Ready</span>
+                    </div>
+                </div>
+
+                <div class="maze-container" id="mazeContainer">
+                    <canvas id="mazeCanvas"></canvas>
+                </div>
+
+                <div class="maze-legend">
+                    <div class="legend-item">
+                        <div class="legend-color start"></div>
+                        <span>Start</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color end"></div>
+                        <span>End</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color wall"></div>
+                        <span>Wall</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color visited"></div>
+                        <span>Visited</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color path"></div>
+                        <span>Solution Path</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Race Results (hidden by default) -->
+        <div class="race-results hidden" id="raceResults">
+            <h2>🏁 Algorithm Race Results</h2>
+            <div class="results-grid" id="resultsGrid"></div>
+            <button id="closeResultsBtn" class="btn btn-secondary">Close</button>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation-section">
+            <h2>🧠 How Maze Algorithms Work</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">🏗️</div>
+                    <h3>Maze Generation (DFS)</h3>
+                    <p>Uses recursive backtracking to carve paths. Start at a cell, randomly visit neighbors, backtrack when stuck. Creates perfect mazes with one solution!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🔵</div>
+                    <h3>DFS Solving</h3>
+                    <p>Depth-First Search: Goes as deep as possible along each path before backtracking. Fast but doesn't guarantee shortest path.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🟢</div>
+                    <h3>BFS Solving</h3>
+                    <p>Breadth-First Search: Explores all neighbors at current distance before going deeper. Always finds shortest path in unweighted mazes!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🟡</div>
+                    <h3>A* Solving</h3>
+                    <p>Heuristic search using f(n) = g(n) + h(n). Combines actual distance traveled with estimated distance to goal. Most efficient pathfinding!</p>
+                </div>
+            </div>
+
+            <div class="algorithm-comparison">
+                <h3>⚔️ Algorithm Comparison</h3>
+                <div class="comparison-table-container">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Shortest Path?</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="algo-name dfs">🔵 DFS</td>
+                                <td>O(V + E)</td>
+                                <td>O(h) - height</td>
+                                <td>❌ No</td>
+                                <td>Memory-efficient exploration</td>
+                            </tr>
+                            <tr>
+                                <td class="algo-name bfs">🟢 BFS</td>
+                                <td>O(V + E)</td>
+                                <td>O(w) - width</td>
+                                <td>✅ Yes</td>
+                                <td>Shortest path (unweighted)</td>
+                            </tr>
+                            <tr>
+                                <td class="algo-name astar">🟡 A*</td>
+                                <td>O(b^d)</td>
+                                <td>O(b^d)</td>
+                                <td>✅ Yes</td>
+                                <td>Optimal pathfinding</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 How Each Algorithm Works</h3>
+                
+                <div class="algo-section">
+                    <h4>🏗️ Maze Generation (Recursive Backtracking)</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Start at random cell</h5>
+                                <p>Mark it as visited and add to stack</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Choose random unvisited neighbor</h5>
+                                <p>Remove wall between current and neighbor</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>Move to neighbor, repeat</h5>
+                                <p>Continue until no unvisited neighbors</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Backtrack when stuck</h5>
+                                <p>Pop from stack, try different path</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algo-section">
+                    <h4>🔵 DFS (Depth-First Search)</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Use Stack (LIFO)</h5>
+                                <p>Push start cell onto stack</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Pop and explore</h5>
+                                <p>Pop cell, mark as visited, check if goal</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>Push all unvisited neighbors</h5>
+                                <p>Goes deep along one path before trying others</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Repeat until goal found</h5>
+                                <p>Naturally backtracks via stack</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algo-section">
+                    <h4>🟢 BFS (Breadth-First Search)</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Use Queue (FIFO)</h5>
+                                <p>Enqueue start cell</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>Dequeue and explore</h5>
+                                <p>Dequeue cell, mark visited, check if goal</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>Enqueue all unvisited neighbors</h5>
+                                <p>Explores all cells at distance d before d+1</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Guaranteed shortest path</h5>
+                                <p>First time reaching goal is shortest route</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algo-section">
+                    <h4>🟡 A* (A-Star Search)</h4>
+                    <div class="steps-list">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h5>Use Priority Queue</h5>
+                                <p>Order by f(n) = g(n) + h(n)</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h5>g(n) = actual cost from start</h5>
+                                <p>Distance traveled so far</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h5>h(n) = heuristic to goal</h5>
+                                <p>Manhattan distance (|x1-x2| + |y1-y2|)</p>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h5>Always choose lowest f(n)</h5>
+                                <p>Intelligently focuses on promising paths</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>🎮 Game Development</strong>
+                        <p>NPC pathfinding in games (Pac-Man, RPGs, Strategy games)</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🤖 Robotics</strong>
+                        <p>Robot navigation and obstacle avoidance in warehouses</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🗺️ GPS Navigation</strong>
+                        <p>Google Maps, Waze - finding optimal routes</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🧩 Puzzle Solving</strong>
+                        <p>Solving Rubik's cube, Sudoku, and other puzzles</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🌐 Network Routing</strong>
+                        <p>Internet packet routing, finding best network paths</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🏗️ Level Design</strong>
+                        <p>Procedural generation of game levels and dungeons</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fun-facts">
+                <h3>💡 Fun Facts</h3>
+                <div class="fact-grid">
+                    <div class="fact-card">
+                        <strong>🎮 Pac-Man Ghosts</strong>
+                        <p>Each ghost uses different pathfinding! Blinky uses A*, Pinky predicts your moves, Inky uses complex math, Clyde is random!</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>🧩 Perfect Maze</strong>
+                        <p>A "perfect maze" has exactly one path between any two points. Our DFS generator creates perfect mazes!</p>
+                    </div>
+                    <div class="fact-card">
+                        <strong>⚡ A* Power</strong>
+                        <p>A* is used in Google Maps! It can find optimal routes among billions of road segments in milliseconds.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 3 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

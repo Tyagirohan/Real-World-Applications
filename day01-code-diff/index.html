@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Diff Visualizer | LCS Algorithm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>📝 Code Diff Visualizer</h1>
+                <p>See code changes like Git - powered by LCS Algorithm!</p>
+            </div>
+        </header>
+
+        <!-- Mode Selection -->
+        <div class="mode-selection">
+            <button class="mode-btn active" data-mode="side-by-side">
+                <span class="mode-icon">⚖️</span>
+                <span class="mode-title">Side-by-Side</span>
+            </button>
+            <button class="mode-btn" data-mode="unified">
+                <span class="mode-icon">📋</span>
+                <span class="mode-title">Unified View</span>
+            </button>
+            <button class="mode-btn" data-mode="lcs-table">
+                <span class="mode-icon">🧮</span>
+                <span class="mode-title">LCS Algorithm</span>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-layout">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ Settings</h2>
+                
+                <div class="quick-examples">
+                    <h3>📚 Quick Examples</h3>
+                    <button class="example-btn" data-example="function">Function Refactor</button>
+                    <button class="example-btn" data-example="html">HTML Update</button>
+                    <button class="example-btn" data-example="json">JSON Config</button>
+                    <button class="example-btn" data-example="css">CSS Changes</button>
+                </div>
+
+                <div class="options-section">
+                    <h3>🎨 Display Options</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="ignoreWhitespace" />
+                        <span>Ignore Whitespace</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="ignoreCase" />
+                        <span>Ignore Case</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showLineNumbers" checked />
+                        <span>Show Line Numbers</span>
+                    </label>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="compareBtn" class="btn btn-primary">🔍 Compare Code</button>
+                    <button id="clearBtn" class="btn btn-secondary">🗑️ Clear All</button>
+                    <button id="swapBtn" class="btn btn-secondary">🔄 Swap Versions</button>
+                </div>
+
+                <!-- Statistics -->
+                <div class="stats-panel">
+                    <h3>📊 Diff Statistics</h3>
+                    <div class="stat-item">
+                        <span class="stat-icon add">+</span>
+                        <span class="stat-label">Additions:</span>
+                        <span class="stat-value" id="additionsCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon delete">-</span>
+                        <span class="stat-label">Deletions:</span>
+                        <span class="stat-value" id="deletionsCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon change">~</span>
+                        <span class="stat-label">Changes:</span>
+                        <span class="stat-value" id="changesCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">≈</span>
+                        <span class="stat-label">Similarity:</span>
+                        <span class="stat-value" id="similarityPercent">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">✏️</span>
+                        <span class="stat-label">Edit Distance:</span>
+                        <span class="stat-value" id="editDistance">0</span>
+                    </div>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="algorithm-info">
+                    <h3>🧠 Algorithm</h3>
+                    <p><strong>LCS:</strong> Longest Common Subsequence</p>
+                    <p><strong>Time:</strong> O(m × n)</p>
+                    <p><strong>Space:</strong> O(m × n)</p>
+                    <p class="info-note">Where m and n are the number of lines in each version.</p>
+                </div>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <!-- Input Editors -->
+                <div class="editors-container" id="editorsContainer">
+                    <div class="editor-section">
+                        <div class="editor-header">
+                            <h3>📄 Original Code</h3>
+                            <span class="editor-label">Before</span>
+                        </div>
+                        <textarea id="originalCode" class="code-editor" placeholder="Paste your original code here..."></textarea>
+                    </div>
+
+                    <div class="editor-section">
+                        <div class="editor-header">
+                            <h3>📝 Modified Code</h3>
+                            <span class="editor-label">After</span>
+                        </div>
+                        <textarea id="modifiedCode" class="code-editor" placeholder="Paste your modified code here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Diff Output -->
+                <div class="diff-output hidden" id="diffOutput">
+                    <div class="diff-header">
+                        <h3>🔍 Diff Result</h3>
+                        <button id="backToEditBtn" class="btn-icon">↩️ Back to Edit</button>
+                    </div>
+                    
+                    <!-- Side-by-Side View -->
+                    <div class="diff-view side-by-side" id="sideBySideView">
+                        <div class="diff-pane">
+                            <h4>📄 Original</h4>
+                            <div class="diff-content" id="originalDiff"></div>
+                        </div>
+                        <div class="diff-pane">
+                            <h4>📝 Modified</h4>
+                            <div class="diff-content" id="modifiedDiff"></div>
+                        </div>
+                    </div>
+
+                    <!-- Unified View -->
+                    <div class="diff-view unified hidden" id="unifiedView">
+                        <h4>📋 Unified Diff</h4>
+                        <div class="diff-content" id="unifiedDiff"></div>
+                    </div>
+
+                    <!-- LCS Table View -->
+                    <div class="diff-view lcs-table hidden" id="lcsTableView">
+                        <h4>🧮 LCS Algorithm Table</h4>
+                        <div class="lcs-explanation">
+                            <p>This table shows how the Longest Common Subsequence algorithm works.</p>
+                            <p>Each cell [i,j] contains the length of LCS for the first i lines of original and first j lines of modified code.</p>
+                        </div>
+                        <div class="table-container" id="lcsTableContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithm Explanation -->
+        <div class="explanation-section">
+            <h2>🧠 How Code Diff Works</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">📏</div>
+                    <h3>LCS Algorithm</h3>
+                    <p>Longest Common Subsequence finds the longest sequence of lines that appear in both versions in the same order. This forms the "unchanged" core.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">✂️</div>
+                    <h3>Edit Distance</h3>
+                    <p>Minimum number of insertions and deletions needed to transform one file into another. Lower = more similar.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🎨</div>
+                    <h3>Diff Visualization</h3>
+                    <p>Lines not in LCS are either additions (green) or deletions (red). Changed lines are shown as delete + add.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">⚡</div>
+                    <h3>Dynamic Programming</h3>
+                    <p>Uses DP table to efficiently compute LCS in O(m×n) time instead of exponential brute force.</p>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 Algorithm Steps</h3>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Split Into Lines</h4>
+                            <p>Break both code versions into arrays of lines for comparison.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Build LCS Table</h4>
+                            <p>Create DP table where dp[i][j] = length of LCS for first i lines of original and first j lines of modified.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Backtrack for LCS</h4>
+                            <p>Trace back through table to find actual common lines.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Generate Diff</h4>
+                            <p>Lines in original but not LCS = deletions. Lines in modified but not LCS = additions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-example">
+                <h3>💻 LCS Implementation</h3>
+                <div class="code-block">
+                    <pre><code>function computeLCS(arr1, arr2) {
+    const m = arr1.length;
+    const n = arr2.length;
+    const dp = Array(m + 1).fill(0)
+        .map(() => Array(n + 1).fill(0));
+    
+    // Build DP table
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (arr1[i-1] === arr2[j-1]) {
+                dp[i][j] = dp[i-1][j-1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+            }
+        }
+    }
+    
+    // Backtrack to find LCS
+    const lcs = [];
+    let i = m, j = n;
+    while (i > 0 && j > 0) {
+        if (arr1[i-1] === arr2[j-1]) {
+            lcs.unshift(arr1[i-1]);
+            i--; j--;
+        } else if (dp[i-1][j] > dp[i][j-1]) {
+            i--;
+        } else {
+            j--;
+        }
+    }
+    
+    return { lcs, dp };
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>🐙 Version Control</strong>
+                        <p>Git, SVN, Mercurial - all use diff algorithms for tracking changes</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📝 Collaborative Editing</strong>
+                        <p>Google Docs, Notion - real-time change tracking and merging</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🔍 Code Review</strong>
+                        <p>GitHub, GitLab pull requests - visualize code changes for review</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📚 Document Comparison</strong>
+                        <p>Legal contracts, academic papers - track revisions over time</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🧬 DNA Sequencing</strong>
+                        <p>Bioinformatics - finding similarities between genetic sequences</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🗣️ Plagiarism Detection</strong>
+                        <p>Academic tools - identify copied content by finding similarities</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-legend">
+                <h3>🎨 Color Legend</h3>
+                <div class="legend-grid">
+                    <div class="legend-item">
+                        <div class="legend-color addition"></div>
+                        <span><strong>Green:</strong> Added lines (new code)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color deletion"></div>
+                        <span><strong>Red:</strong> Deleted lines (removed code)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color unchanged"></div>
+                        <span><strong>White:</strong> Unchanged lines (common to both)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 1 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

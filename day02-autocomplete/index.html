@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocomplete Engine | Trie Algorithm</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>🔍 Autocomplete Engine</h1>
+                <p>Real-time search suggestions powered by Trie data structure!</p>
+            </div>
+        </header>
+
+        <!-- Search Demo Section -->
+        <div class="search-demo-section">
+            <div class="demo-card">
+                <h2>🎯 Try It Out!</h2>
+                <p>Start typing to see suggestions appear instantly</p>
+                
+                <div class="search-container">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="search-input" 
+                            placeholder="Type to search... (e.g., 'java', 'python', 'algorithm')"
+                            autocomplete="off"
+                        />
+                        <button id="clearSearchBtn" class="clear-btn hidden">✕</button>
+                    </div>
+                    
+                    <div class="suggestions-dropdown hidden" id="suggestionsDropdown">
+                        <div class="suggestions-list" id="suggestionsList"></div>
+                        <div class="suggestions-footer">
+                            Powered by Trie • <span id="searchTime">0ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-stats">
+                    <div class="stat-badge">
+                        <span class="stat-label">Words in Dictionary:</span>
+                        <span class="stat-value" id="totalWords">0</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="stat-label">Trie Nodes:</span>
+                        <span class="stat-value" id="trieNodes">0</span>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="stat-label">Memory Saved:</span>
+                        <span class="stat-value" id="memorySaved">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ Dictionary Manager</h2>
+                
+                <div class="add-word-section">
+                    <h3>➕ Add Words</h3>
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="wordInput" 
+                            placeholder="Enter a word..."
+                            class="word-input"
+                        />
+                        <input 
+                            type="number" 
+                            id="frequencyInput" 
+                            placeholder="Frequency"
+                            value="1"
+                            min="1"
+                            class="frequency-input"
+                        />
+                    </div>
+                    <button id="addWordBtn" class="btn btn-primary">Add Word</button>
+                </div>
+
+                <div class="presets-section">
+                    <h3>📚 Quick Load</h3>
+                    <button class="preset-btn" data-preset="programming">Programming Languages</button>
+                    <button class="preset-btn" data-preset="algorithms">Algorithms & DS</button>
+                    <button class="preset-btn" data-preset="cities">World Cities</button>
+                    <button class="preset-btn" data-preset="tech">Tech Companies</button>
+                </div>
+
+                <div class="options-section">
+                    <h3>🎨 Options</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="caseSensitive" />
+                        <span>Case Sensitive</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showFrequency" checked />
+                        <span>Show Frequency</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sortByFrequency" checked />
+                        <span>Sort by Frequency</span>
+                    </label>
+                    
+                    <div class="slider-group">
+                        <label>Max Suggestions: <span id="maxSuggestionsValue">10</span></label>
+                        <input type="range" id="maxSuggestions" min="3" max="20" value="10" class="slider" />
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="clearDictionaryBtn" class="btn btn-danger">🗑️ Clear Dictionary</button>
+                    <button id="exportBtn" class="btn btn-secondary">💾 Export Dictionary</button>
+                </div>
+
+                <!-- Algorithm Info -->
+                <div class="algorithm-info">
+                    <h3>🧠 Algorithm</h3>
+                    <p><strong>Trie (Prefix Tree)</strong></p>
+                    <p><strong>Search:</strong> O(k)</p>
+                    <p><strong>Insert:</strong> O(k)</p>
+                    <p><strong>Space:</strong> O(ALPHABET_SIZE × N × k)</p>
+                    <p class="info-note">Where k = word length, N = number of words</p>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-area">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="trie-visual">🌳 Trie Structure</button>
+                    <button class="tab-btn" data-tab="word-list">📋 Word List</button>
+                    <button class="tab-btn" data-tab="performance">📊 Performance</button>
+                </div>
+
+                <!-- Trie Visualization Tab -->
+                <div class="tab-content active" id="trie-visual">
+                    <div class="viz-header">
+                        <h3>🌳 Trie Structure Visualization</h3>
+                        <div class="viz-controls">
+                            <button id="expandAllBtn" class="viz-btn">📂 Expand All</button>
+                            <button id="collapseAllBtn" class="viz-btn">📁 Collapse All</button>
+                        </div>
+                    </div>
+                    <div class="trie-container" id="trieContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">🌱</div>
+                            <h3>Trie is Empty</h3>
+                            <p>Add words to see the trie structure!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Word List Tab -->
+                <div class="tab-content" id="word-list">
+                    <div class="viz-header">
+                        <h3>📋 Dictionary Words</h3>
+                        <div class="viz-controls">
+                            <input type="text" id="filterInput" placeholder="Filter words..." class="filter-input" />
+                        </div>
+                    </div>
+                    <div class="words-container" id="wordsContainer">
+                        <div class="empty-state">
+                            <div class="empty-icon">📖</div>
+                            <h3>No Words Yet</h3>
+                            <p>Add words to your dictionary!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div class="tab-content" id="performance">
+                    <div class="viz-header">
+                        <h3>📊 Performance Metrics</h3>
+                    </div>
+                    <div class="performance-container">
+                        <div class="metric-card">
+                            <div class="metric-icon">⚡</div>
+                            <h4>Search Speed</h4>
+                            <div class="metric-value" id="avgSearchTime">0ms</div>
+                            <p>Average lookup time</p>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">💾</div>
+                            <h4>Memory Efficiency</h4>
+                            <div class="metric-value" id="memoryEfficiency">0%</div>
+                            <p>Saved via prefix sharing</p>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">📈</div>
+                            <h4>Total Searches</h4>
+                            <div class="metric-value" id="totalSearches">0</div>
+                            <p>Queries performed</p>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">🎯</div>
+                            <h4>Hit Rate</h4>
+                            <div class="metric-value" id="hitRate">0%</div>
+                            <p>Successful matches</p>
+                        </div>
+                    </div>
+
+                    <div class="comparison-section">
+                        <h4>⚔️ Trie vs Array Comparison</h4>
+                        <div class="comparison-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Operation</th>
+                                        <th>Trie</th>
+                                        <th>Array (Linear)</th>
+                                        <th>Winner</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparisonTable">
+                                    <tr>
+                                        <td>Search</td>
+                                        <td class="winner">O(k)</td>
+                                        <td>O(n × k)</td>
+                                        <td>🏆 Trie</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Prefix Match</td>
+                                        <td class="winner">O(k + m)</td>
+                                        <td>O(n × k)</td>
+                                        <td>🏆 Trie</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Space</td>
+                                        <td>O(ALPHABET × N × k)</td>
+                                        <td class="winner">O(N × k)</td>
+                                        <td>🏆 Array</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Insert</td>
+                                        <td class="winner">O(k)</td>
+                                        <td>O(1)</td>
+                                        <td>🏆 Trie*</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="comparison-note">* Trie excels at prefix searches, making it ideal for autocomplete!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Section -->
+        <div class="explanation-section">
+            <h2>🧠 How Autocomplete Works</h2>
+            
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-icon">🌳</div>
+                    <h3>Trie (Prefix Tree)</h3>
+                    <p>A tree where each path from root represents a word. Common prefixes share nodes, making prefix searches lightning fast!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">⚡</div>
+                    <h3>O(k) Lookup</h3>
+                    <p>Search time depends only on word length (k), not dictionary size. 1 million words? Still O(k)!</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">🎯</div>
+                    <h3>Prefix Matching</h3>
+                    <p>Type "alg" → instantly find all words starting with "alg" (algorithm, algebra, etc.) by traversing one path.</p>
+                </div>
+                
+                <div class="concept-card">
+                    <div class="concept-icon">📊</div>
+                    <h3>Frequency Ranking</h3>
+                    <p>Track how often each word is searched. Popular words appear first, just like Google!</p>
+                </div>
+            </div>
+
+            <div class="algorithm-steps">
+                <h3>📝 How It Works</h3>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Build the Trie</h4>
+                            <p>Insert all dictionary words. Each character becomes a node. Common prefixes share parent nodes.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Navigate to Prefix</h4>
+                            <p>User types "alg" → traverse tree following 'a' → 'l' → 'g'. Takes O(3) time!</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Collect All Words</h4>
+                            <p>From the prefix node, DFS traverse to find all complete words below it.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Rank by Frequency</h4>
+                            <p>Sort suggestions by frequency (most popular first) and return top N results.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-example">
+                <h3>💻 Trie Implementation</h3>
+                <div class="code-block">
+                    <pre><code>class TrieNode {
+    constructor() {
+        this.children = new Map();
+        this.isEndOfWord = false;
+        this.frequency = 0;
+        this.word = '';
+    }
+}
+
+class Trie {
+    constructor() {
+        this.root = new TrieNode();
+    }
+    
+    insert(word, frequency = 1) {
+        let node = this.root;
+        for (const char of word) {
+            if (!node.children.has(char)) {
+                node.children.set(char, new TrieNode());
+            }
+            node = node.children.get(char);
+        }
+        node.isEndOfWord = true;
+        node.frequency += frequency;
+        node.word = word;
+    }
+    
+    search(prefix) {
+        let node = this.root;
+        // Navigate to prefix
+        for (const char of prefix) {
+            if (!node.children.has(char)) {
+                return [];
+            }
+            node = node.children.get(char);
+        }
+        
+        // Collect all words from here
+        const results = [];
+        this.dfs(node, results);
+        
+        // Sort by frequency
+        results.sort((a, b) => b.frequency - a.frequency);
+        return results;
+    }
+    
+    dfs(node, results) {
+        if (node.isEndOfWord) {
+            results.push(node);
+        }
+        for (const child of node.children.values()) {
+            this.dfs(child, results);
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="applications">
+                <h3>🌟 Real-World Applications</h3>
+                <div class="app-grid">
+                    <div class="app-card">
+                        <strong>🔍 Google Search</strong>
+                        <p>Instant search suggestions as you type</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>💻 IDE Autocomplete</strong>
+                        <p>VS Code, IntelliJ - variable/function suggestions</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📱 Phone Contacts</strong>
+                        <p>Quick name lookup in contact lists</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🗺️ Maps & Navigation</strong>
+                        <p>Google Maps, Uber - address autocomplete</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>🛒 E-commerce</strong>
+                        <p>Amazon, eBay - product search suggestions</p>
+                    </div>
+                    <div class="app-card">
+                        <strong>📧 Email Clients</strong>
+                        <p>Gmail - recipient name suggestions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Day 2 of Week 3: #RealWorldApplications 🚀 | Built by <a href="https://www.linkedin.com/in/rohan-tyagi-333675202/" target="_blank">Rohan Tyagi</a></p>
+            <div class="footer-links">
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View on GitHub</a>
+                <a href="https://github.com/Tyagirohan/Real-World-Applications" target="_blank">View All Projects</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
